@@ -22,6 +22,10 @@ mongoClient.connect(connectionString)
             return users.length !== 0
         }
 
+        router.get("/version", async (req, res) => {
+            res.send(process.env.npm_package_version)
+        })
+
         router.get("/auth/user/exists/:username", async (req, res) => {
             await userExists(req.params.username)
         })

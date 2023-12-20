@@ -1,6 +1,6 @@
 {
-  "name": "vue-test-backend",
-  "version": "1.0.0",
+  "name": "hankai-forum-backend",
+  "version": "0.0.1",
   "description": "",
   "main": "app.js",
   "scripts": {
