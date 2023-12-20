@@ -27,7 +27,8 @@ mongoClient.connect(connectionString)
         })
 
         router.get("/auth/user/exists/:username", async (req, res) => {
-            await userExists(req.params.username)
+            const result = await userExists(req.params.username)
+            res.send(result)
         })
 
         router.post("/auth/user/signup", async (req, res) => {
