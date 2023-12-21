@@ -1,4 +1,4 @@
 # Development version
 ```sh
-npm start
+npm run dev
 ```
