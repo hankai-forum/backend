@@ -16,6 +16,7 @@ mongoClient.connect(connectionString)
         const postCollection = db.collection("Post")
         const commentCollection = db.collection("Comment")
         const userCollection = db.collection("User")
+        const voteCollection = db.collection("Vote")
         
         async function userExists(username) {
             const users = await userCollection.find({username: username}).toArray()
@@ -144,6 +145,56 @@ mongoClient.connect(connectionString)
             const deletedComment = await commentCollection.findOneAndDelete({_id: new ObjectId(commentId)})
             res.send(deletedComment)
         })
+
+
+
+        router.get("/votes/posts/:postId", async (req, res) => {
+            const postId = req.params.postId
+            const upvotes = await voteCollection.find({postId: new ObjectId(postId), type: 1}).toArray()
+            const downvotes = await voteCollection.find({postId: new ObjectId(postId), type: 0}).toArray()
+            res.send({"upvotes": upvotes, "downvotes": downvotes})
+        })
+
+        router.get("/votes/comments/:commentId", async (req, res) => {
+            const commentId = req.params.commentId
+            const upvotes = await voteCollection.find({postId: new ObjectId(commentId), type: 1}).toArray()
+            const downvotes = await voteCollection.find({postId: new ObjectId(commentId), type: 0}).toArray()
+            res.send({"upvotes": upvotes, "downvotes": downvotes})
+        })
+
+        router.delete("/votes/posts/del/:userId/:postId", async (req, res) => {
+            const postId = req.params.postId
+            const userId = req.params.userId
+            const deletedVote = await voteCollection.findOneAndDelete({postId: new ObjectId(postId), userId: new ObjectId(userId)})
+            res.send(deletedVote)
+        })
+
+        router.delete("/votes/comments/del/:userId/:commentId", async (req, res) => {
+            const commentId = req.params.commentId
+            const userId = req.params.userId
+            const deletedVote = await voteCollection.findOneAndDelete({commentId: new ObjectId(commentId), userId: new ObjectId(userId)})
+            res.send(deletedVote)
+        })
+
+        router.post("/votes/add", async (req, res) => {
+            req.body.userId = new ObjectId(req.body.userId)
+            req.body.postId = new ObjectId(req.body.postId)
+            const vote = await voteCollection.insertOne(req.body)
+                .then(result => {
+                    res.send(result)
+                })
+                .catch(error => {
+                    console.log(error)
+                })
+        })
+
+        router.get("/votes/:userId/:postId", async (req, res) => {
+            const userId = new ObjectId(req.params.userId)
+            const postId = new ObjectId(req.params.postId)
+            const vote = await voteCollection.find({userId: userId, postId: postId}).toArray()
+            res.send(vote)
+        })
+
     })
     .catch(error => {
       console.log(error)
