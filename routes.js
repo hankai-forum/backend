@@ -118,7 +118,15 @@ mongoClient.connect(connectionString)
         router.get("/posts/comments/:postId", async (req, res) => {
             const postId = req.params.postId
             const comments = await commentCollection.find({parentPost: true, parentId: new ObjectId(postId)}).toArray()
-            res.send(comments)
+            commentUsernames = []
+            for (const comment of comments) {
+                const username = (await userCollection.find({_id: new ObjectId(comment.userId)}).username)
+                commentUsernames.push(username)
+            }
+            res.send({
+                "comments": comments,
+                "commentUsernames": commentUsernames
+                })
         })
 
         // TODO: same as posts, user-controlled userid
