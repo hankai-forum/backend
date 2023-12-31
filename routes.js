@@ -120,8 +120,7 @@ mongoClient.connect(connectionString)
             const comments = await commentCollection.find({parentPost: true, parentId: new ObjectId(postId)}).toArray()
             commentUsernames = []
             for (const comment of comments) {
-                const username = (await userCollection.find({_id: new ObjectId(comment.userId)}).username)
-                commentUsernames.push(username)
+                commentUsernames.push(comment.username)
             }
             res.send({
                 "comments": comments,
