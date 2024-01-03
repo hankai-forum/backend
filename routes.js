@@ -60,19 +60,20 @@ mongoClient.connect(connectionString)
             if (!passwordMatch){
                 res.send(false)
             }
-            const token = jwt.sign({ userId: user[0]._id }, jwtSecret, { expiresIn: '1d' })
+            const token = jwt.sign({ userId: user[0]._id, username: user[0].username }, jwtSecret, { expiresIn: '1d' })
             res.send({token})
             
         })
 
         router.post("/auth/user/details", async (req, res) => {
             const token = req.body.token
-            console.log(token)
+            // console.log(token)
             jwt.verify(token, jwtSecret, (err, decoded) => {
                 if (err){
                     res.send(false)
                 }
-                res.send({ "userId": decoded.userId})
+                // console.log(decoded)
+                res.send({ "username": decoded.username })
             })
         })
 
@@ -102,7 +103,8 @@ mongoClient.connect(connectionString)
 
         // TODO: user-controlled userid, use token instead
         router.post("/posts/add", (req, res) => {
-            req.body.userId = new ObjectId(req.body.userId)
+            // req.body.userId = new ObjectId(req.body.userId)
+            console.log(req.body)
             postCollection.insertOne(req.body)
                 .then(result => {
                     res.send(result)
@@ -169,22 +171,21 @@ mongoClient.connect(connectionString)
             res.send({"upvotes": upvotes, "downvotes": downvotes})
         })
 
-        router.delete("/votes/posts/del/:userId/:postId", async (req, res) => {
+        router.delete("/votes/posts/del/:username/:postId", async (req, res) => {
             const postId = req.params.postId
-            const userId = req.params.userId
-            const deletedVote = await voteCollection.findOneAndDelete({postId: new ObjectId(postId), userId: new ObjectId(userId)})
+            const username = req.params.username
+            const deletedVote = await voteCollection.findOneAndDelete({postId: new ObjectId(postId), username: username})
             res.send(deletedVote)
         })
 
-        router.delete("/votes/comments/del/:userId/:commentId", async (req, res) => {
+        router.delete("/votes/comments/del/:username/:commentId", async (req, res) => {
             const commentId = req.params.commentId
-            const userId = req.params.userId
-            const deletedVote = await voteCollection.findOneAndDelete({commentId: new ObjectId(commentId), userId: new ObjectId(userId)})
+            const username = req.params.username
+            const deletedVote = await voteCollection.findOneAndDelete({commentId: new ObjectId(commentId), username: new ObjectId(username)})
             res.send(deletedVote)
         })
 
         router.post("/votes/add", async (req, res) => {
-            req.body.userId = new ObjectId(req.body.userId)
             req.body.postId = new ObjectId(req.body.postId)
             const vote = await voteCollection.insertOne(req.body)
                 .then(result => {
@@ -195,10 +196,10 @@ mongoClient.connect(connectionString)
                 })
         })
 
-        router.get("/votes/:userId/:postId", async (req, res) => {
-            const userId = new ObjectId(req.params.userId)
+        router.get("/votes/:username/:postId", async (req, res) => {
             const postId = new ObjectId(req.params.postId)
-            const vote = await voteCollection.find({userId: userId, postId: postId}).toArray()
+            const username = req.params.username
+            const vote = await voteCollection.find({username: username, postId: postId}).toArray()
             res.send(vote)
         })
 
