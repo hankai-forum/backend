@@ -36,6 +36,7 @@ mongoClient.connect(connectionString)
             // make sure that the user does not exist
             if (await userExists(req.body.username)) {
                 res.send(false)
+                return 0;
             }
             const saltRounds = 10
             req.body.password = await bcrypt.hash(req.body.password, saltRounds)
@@ -53,12 +54,14 @@ mongoClient.connect(connectionString)
             // make sure that the user exists
             const { username, password } = req.body;
             const user = await userCollection.find({username: username}).toArray()
-            if (user.len() === 0) {
+            if (user.length === 0) {
                 res.send(false)
+                return 0;
             }
             const passwordMatch = await bcrypt.compare(password, user[0].password);
             if (!passwordMatch){
                 res.send(false)
+                return 0;
             }
             const token = jwt.sign({ userId: user[0]._id, username: user[0].username }, jwtSecret, { expiresIn: '1d' })
             res.send({token})
@@ -71,6 +74,7 @@ mongoClient.connect(connectionString)
             jwt.verify(token, jwtSecret, (err, decoded) => {
                 if (err){
                     res.send(false)
+                    return 0;
                 }
                 // console.log(decoded)
                 res.send({ "username": decoded.username })
