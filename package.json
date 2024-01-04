@@ -7,8 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon app.js"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Fustigate & YZ9551(YXZ)",
+  "license": "GPL v3",
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.20.2",
