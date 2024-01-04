@@ -23,13 +23,38 @@ mongoClient.connect(connectionString)
             return users.length !== 0
         }
 
+        async function deletePost(postId) {
+            const deletedPost = await postCollection.findOneAndDelete({_id: new ObjectId(postId)})
+            const comments = await getComments(postId)
+            for (const comment of comments.comments) {
+                deleteComment(comment._id)
+            }
+            await voteCollection.deleteMany({postId: new ObjectId(postId)})
+            return deletedPost
+        }
+
+        async function deleteComment(commentId) {
+            return await commentCollection.findOneAndDelete({_id: new ObjectId(commentId)});
+        }   
+
+        async function getComments(postId) {
+            const comments = await commentCollection.find({parentPost: true, parentId: new ObjectId(postId)}).toArray()
+            commentUsernames = []
+            for (const comment of comments) {
+                commentUsernames.push(comment.username)
+            }
+            return {
+                    "comments": comments,
+                    "commentUsernames": commentUsernames
+                }
+        }
+
         router.get("/version", async (req, res) => {
             res.send(process.env.npm_package_version)
         })
 
         router.get("/auth/user/exists/:username", async (req, res) => {
-            const result = await userExists(req.params.username)
-            res.send(result)
+            res.send(await userExists(req.params.username))
         })
 
         router.post("/auth/user/signup", async (req, res) => {
@@ -86,7 +111,7 @@ mongoClient.connect(connectionString)
         router.get("/auth/user/getUser/:userId", async (req, res) => {
             const userId = req.params.userId
             const user = await userCollection.find({_id: new ObjectId(userId)}).toArray()
-            res.send(user)
+            // res.send(user)
         })
 
         // TODO: all posts are send to the frontend(user) consider only querying the top
@@ -99,7 +124,7 @@ mongoClient.connect(connectionString)
             const postId = req.params.postId
             const post = await postCollection.find({_id: new ObjectId(postId)}).toArray()
             if (!post){
-                res.send({"status": `Post with id ${postId} not found`})
+                res.send()
             }else{
                 res.send(post)
             }
@@ -116,22 +141,13 @@ mongoClient.connect(connectionString)
                 .catch(error => {
                     console.log("Error!")
                     console.log(error)
-                    res.send(error)
+                    // res.send(error)
                 })
         });
 
         // TODO: similar to getting posts, the client could be flooded, but should be less dire
         router.get("/posts/comments/:postId", async (req, res) => {
-            const postId = req.params.postId
-            const comments = await commentCollection.find({parentPost: true, parentId: new ObjectId(postId)}).toArray()
-            commentUsernames = []
-            for (const comment of comments) {
-                commentUsernames.push(comment.username)
-            }
-            res.send({
-                "comments": comments,
-                "commentUsernames": commentUsernames
-                })
+            res.send(await getComments(req.params.postId))
         })
 
         // TODO: same as posts, user-controlled userid
@@ -148,18 +164,12 @@ mongoClient.connect(connectionString)
 
         // TODO: add validation for deletions
         router.delete("/posts/del/:postId", async (req, res) => {
-            const postId = req.params.postId
-            const deletedPost = await postCollection.findOneAndDelete({_id: new ObjectId(postId)})
-            res.send(deletedPost)
+            res.send(await deletePost(req.params.postId))
         })
 
         router.delete("/posts/comments/del/:commentId", async (req, res) => {
-            const commentId = req.params.commentId
-            const deletedComment = await commentCollection.findOneAndDelete({_id: new ObjectId(commentId)})
-            res.send(deletedComment)
+            res.send(deleteComment(req.params.commentId))
         })
-
-
 
         router.get("/votes/posts/:postId", async (req, res) => {
             const postId = req.params.postId
