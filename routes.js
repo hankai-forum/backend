@@ -46,7 +46,7 @@ mongoClient.connect(connectionString)
                 })
                 .catch(error => {
                     console.error("Error: ", error)
-                    res.send(error)
+                    // res.send(error)
                 })
         })
 
