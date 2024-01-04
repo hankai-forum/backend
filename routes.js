@@ -52,7 +52,8 @@ mongoClient.connect(connectionString)
         router.post("/auth/user/signin", async (req, res) => {
             // make sure that the user exists
             const { username, password } = req.body;
-            if (const user = await userCollection.find({username: username}).toArray()) {
+            const user = await userCollection.find({username: username}).toArray()
+            if (user.len() === 0) {
                 res.send(false)
             }
             const passwordMatch = await bcrypt.compare(password, user[0].password);
