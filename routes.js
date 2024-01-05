@@ -56,8 +56,9 @@ mongoClient.connect(connectionString)
         }   
 
         async function getComments(postId) {
-            const comments = await commentCollection.find({parentPost: true, parentId: new ObjectId(postId)}).toArray()
+            let comments = await commentCollection.find({parentPost: true, parentId: new ObjectId(postId)}).toArray()
             commentUsernames = []
+            comments = comments.reverse()
             for (const comment of comments) {
                 commentUsernames.push(comment.username)
             }
@@ -135,7 +136,7 @@ mongoClient.connect(connectionString)
         // TODO: all posts are send to the frontend(user) consider only querying the top
         router.get("/posts", async (req, res) => {
             const postsList = await postCollection.find({}).toArray()
-            res.send(postsList)
+            res.send(postsList.reverse())
         });
 
         router.get("/posts/:postId", async (req, res) => {
