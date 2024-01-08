@@ -35,6 +35,7 @@ mongoClient.connect(connectionString)
         const commentCollection = db.collection("Comment")
         const userCollection = db.collection("User")
         const voteCollection = db.collection("Vote")
+        const reactionCollection = db.collection("Reaction")
         
         async function userExists(username) {
             const users = await userCollection.find({username: username}).toArray()
@@ -52,8 +53,10 @@ mongoClient.connect(connectionString)
         }
 
         async function deleteComment(commentId) {
-            return await commentCollection.findOneAndDelete({_id: new ObjectId(commentId)});
-        }   
+            await commentCollection.findOneAndDelete({_id: new ObjectId(commentId)});
+            await reactionCollection.deleteMany({commentId: new ObjectId(commentId)});
+            return {"feedback": "deleted comment and its reactions"}
+        }
 
         async function getComments(postId) {
             let comments = await commentCollection.find({parentPost: true, parentId: new ObjectId(postId)}).toArray()
@@ -234,6 +237,30 @@ mongoClient.connect(connectionString)
             const username = req.params.username
             const vote = await voteCollection.find({username: username, postId: postId}).toArray()
             res.send(vote)
+        })
+
+        router.post("/reaction/add", (req, res) => {
+            req.body.commentId = new ObjectId(req.body.commentId)
+            reactionCollection.insertOne(req.body)
+                .then(result => {
+                    res.send(result)
+                })
+                .catch(error => {
+                    console.log(error)
+                })
+        })
+
+        router.get("/reaction/:commentId", async (req, res) => {
+            const commentId = new ObjectId(req.params.commentId)
+            console.log(commentId)
+            const reactions = await reactionCollection.find({commentId: commentId}).toArray()
+            res.send(reactions)
+        })
+
+        router.delete("/reaction/del/:reactionId", async (req, res) => {
+            const reactionId = req.params.reactionId
+            const deletedReaction = await reactionCollection.findOneAndDelete({_id: new ObjectId(reactionId)})
+            res.send(deletedReaction)
         })
 
     })
