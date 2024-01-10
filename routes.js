@@ -129,9 +129,13 @@ mongoClient.connect(connectionString)
         })
 
         router.get("/auth/user/detailsbyusername/:username", async (req, res) => {
-            const username = req.params.username
-            const userDetails = await userCollection.find({username: username}).toArray()
-            res.send({username: userDetails[0].username, description: userDetails[0].description})
+            try{
+                const username = req.params.username
+                const userDetails = await userCollection.find({username: username}).toArray()
+                res.send({username: userDetails[0].username, description: userDetails[0].description})
+            }catch{
+                res.send({username: undefined})
+            }
         })
 
         router.put("/auth/user/description", async (req, res) =>{
@@ -267,14 +271,14 @@ mongoClient.connect(connectionString)
 
         router.get("/reaction/:commentId", async (req, res) => {
             const commentId = new ObjectId(req.params.commentId)
-            console.log(commentId)
             const reactions = await reactionCollection.find({commentId: commentId}).toArray()
             res.send(reactions)
         })
 
-        router.delete("/reaction/del/:reactionId", async (req, res) => {
+        router.delete("/reaction/del/:reactionId/:username", async (req, res) => {
             const reactionId = req.params.reactionId
-            const deletedReaction = await reactionCollection.findOneAndDelete({_id: new ObjectId(reactionId)})
+            const username = req.params.username
+            const deletedReaction = await reactionCollection.findOneAndDelete({_id: new ObjectId(reactionId), username: username})
             res.send(deletedReaction)
         })
     })
