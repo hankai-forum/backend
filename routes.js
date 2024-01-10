@@ -115,7 +115,7 @@ mongoClient.connect(connectionString)
             
         })
 
-        router.post("/auth/user/details", async (req, res) => {
+        router.post("/auth/user/detailsbytoken", async (req, res) => {
             const token = req.body.token
             // console.log(token)
             jwt.verify(token, jwtSecret, (err, decoded) => {
@@ -126,6 +126,21 @@ mongoClient.connect(connectionString)
                 // console.log(decoded)
                 res.send({ "username": decoded.username })
             })
+        })
+
+        router.get("/auth/user/detailsbyusername/:username", async (req, res) => {
+            const username = req.params.username
+            const userDetails = await userCollection.find({username: username}).toArray()
+            res.send({username: userDetails[0].username, description: userDetails[0].description})
+        })
+
+        router.put("/auth/user/description", async (req, res) =>{
+            const username = req.body.username
+            const description = req.body.description
+            console.log(username, description)
+            const result = await userCollection.updateOne({username: username}, {$set: {description: description}})
+            console.log(result)
+            res.send(result)
         })
 
         // TODO: this endpoint exposes all user data including username and hashed password
@@ -262,7 +277,6 @@ mongoClient.connect(connectionString)
             const deletedReaction = await reactionCollection.findOneAndDelete({_id: new ObjectId(reactionId)})
             res.send(deletedReaction)
         })
-
     })
     .catch(error => {
       console.log(error)
